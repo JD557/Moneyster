@@ -36,13 +36,13 @@ void MoneyCounter::create_bill_list(string pattern_folder){
 	}
 
 	patterns.push("5f.jpg");
-	//patterns.push("5b.jpg");
-	//patterns.push("10f.jpg");
-	//patterns.push("10b.jpg");
-	//patterns.push("20f.jpg");
-	//patterns.push("20b.jpg");
-	//patterns.push("50f.jpg");
-	//patterns.push("50b.jpg");
+	patterns.push("5b.jpg");
+	patterns.push("10f.jpg");
+	patterns.push("10b.jpg");
+	patterns.push("20f.jpg");
+	patterns.push("20b.jpg");
+	patterns.push("50f.jpg");
+	patterns.push("50b.jpg");
 }
 
 void MoneyCounter::set_detector(FeatureDetector* detector){
@@ -67,7 +67,15 @@ void MoneyCounter::count() {
 
 
 	detector->detect(img_scene, keypoints_scene);
+
+	if (keypoints_scene.size() == 0){
+		display();
+		return;
+	}
+
 	extractor->compute(img_scene, keypoints_scene, descriptors_scene);
+
+
 
 	std::vector<KeyPoint> keypoints_scene_bk = keypoints_scene;
 	Mat descriptors_scene_bk = descriptors_scene.clone();
@@ -79,6 +87,10 @@ void MoneyCounter::count() {
 		descriptors_scene = descriptors_scene_bk.clone();
 	}
 
+	display();
+}
+
+void MoneyCounter::display(){
 	imshow("Good Matches & Object detection", img_matches);
 	waitKey(0);
 }
@@ -91,6 +103,7 @@ bool MoneyCounter::detect_bills(){
 	
 	max_dist = 0;
 	min_dist = 100;
+
 
 	//-- Quick calculation of max and min distances between keypoints
 	for (int i = 0; i < descriptors_object.rows; i++){
@@ -115,8 +128,8 @@ bool MoneyCounter::detect_bills(){
 	/*
 	drawMatches(img_object, keypoints_object, img_scene, keypoints_scene,
 		good_matches, img_matches, Scalar::all(-1), Scalar::all(-1),
-		vector<char>());*/
-	
+		vector<char>());
+	*/
 	
 	obj.clear(); scene.clear();
 	for (int i = 0; i < good_matches.size(); i++){
@@ -143,7 +156,8 @@ bool MoneyCounter::detect_bills(){
 		}
 	}
 
-	highlight_bill(scene_corners, 5/*, img_object.cols*/);
+	highlight_bill(scene_corners, 5);
+	//highlight_bill(scene_corners, 5, img_object.cols);
 	//imshow("Good Matches & Object detection", img_matches);
 	//cv::waitKey(0);
 
@@ -251,10 +265,9 @@ void MoneyCounter::filter_keypoints_5f(){
 
 void MoneyCounter::filter_keypoints_5b(){
 	Area a;
-	a.add(7,6,122,30);
-	a.add(8, 99, 30, 131);
-	a.add(188, 6, 225, 66);
-	a.add(130, 10, 231, 128);
+	a.add(9,5,15,21);
+	a.add(7,100,20,30);
+	a.add(240,107,16,22);
 	filter(a);
 }
 
@@ -311,11 +324,33 @@ void MoneyCounter::filter_keypoints_50b(){
 	filter(a);
 }
 
+
+#define FONT_FACE cv::FONT_HERSHEY_SCRIPT_COMPLEX
+#define FONT_THICKNESS 3
+#define FONT_RATIO 4
+
 void MoneyCounter::highlight_bill(const std::vector<Point2f> &corners, int value, double shift){
 	line(img_matches, corners[0] + Point2f(shift, 0), corners[1] + Point2f(shift, 0), Scalar(0, 255, 0), 4);
 	line(img_matches, corners[1] + Point2f(shift, 0), corners[2] + Point2f(shift, 0), Scalar(0, 255, 0), 4);
 	line(img_matches, corners[2] + Point2f(shift, 0), corners[3] + Point2f(shift, 0), Scalar(0, 255, 0), 4);
 	line(img_matches, corners[3] + Point2f(shift, 0), corners[0] + Point2f(shift, 0), Scalar(0, 255, 0), 4);
+
+	cv::Rect bounding_rect = cv::boundingRect(corners);
+	cv::Point2f center(bounding_rect.x + bounding_rect.width / 2.0, bounding_rect.y + bounding_rect.height / 2.0);
+	double max_dimen = bounding_rect.width > bounding_rect.height ? bounding_rect.width : bounding_rect.height;
+
+	std::stringstream ss;
+	ss << value;
+	string text = ss.str();
+
+	double font_scale = 2;
+	int baseline = 0;
+	cv::Size text_size = cv::getTextSize(text, FONT_FACE, font_scale, FONT_THICKNESS, &baseline);
+
+	font_scale = max_dimen / (text_size.width * FONT_RATIO);
+	text_size = cv::getTextSize(text, FONT_FACE, font_scale, FONT_THICKNESS, &baseline);
+	cv::Point2f text_position = center - cv::Point2f(text_size.width / 2.0, -text_size.height / 2.0);
+	cv::putText(img_matches, text, text_position, FONT_FACE, font_scale, cv::Scalar(255, 0, 0), FONT_THICKNESS);
 
 }
 

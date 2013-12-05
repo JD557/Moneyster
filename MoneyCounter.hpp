@@ -9,6 +9,7 @@
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/nonfree/nonfree.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include <sstream>
 
 using namespace cv;
 
@@ -81,6 +82,7 @@ private:
 	void filter_keypoints_50b();
 	void filter(Area areas);
 	bool detect_bills();
+	void display();
 	void highlight_bill(const std::vector<Point2f> &corners, int value, double shift = 0);
 	
 };
