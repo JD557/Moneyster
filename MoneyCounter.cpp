@@ -1,5 +1,7 @@
 #include "MoneyCounter.hpp"
-
+#define FONT_FACE cv::FONT_HERSHEY_SCRIPT_COMPLEX
+#define FONT_THICKNESS 3
+#define FONT_RATIO 4
 using std::string;
 using std::cout; 
 using std::endl; 
@@ -13,16 +15,15 @@ MoneyCounter::MoneyCounter(string pattern_folder, string scene_img){
 	total_value = 0;
 	obj_corners.resize(4);
 	img_matches = imread(scene_img);
+
+	DEBUG_MODE = false;
 }
 
 MoneyCounter::~MoneyCounter()
 {
-	detector = NULL;
-	extractor = NULL;
-	matcher = NULL;
-	delete detector;
+/*	delete detector;
 	delete extractor;
-	delete matcher;
+	delete matcher; */
 }
 
 void MoneyCounter::create_bill_list(string pattern_folder){
@@ -91,6 +92,24 @@ void MoneyCounter::count() {
 }
 
 void MoneyCounter::display(){
+
+	//cv::Rect bounding_rect = cv::boundingRect();
+	//cv::Point2f center(bounding_rect.x + bounding_rect.width / 2.0, bounding_rect.y + bounding_rect.height / 2.0);
+	//double max_dimen = bounding_rect.width > bounding_rect.height ? bounding_rect.width : bounding_rect.height;
+
+	std::stringstream ss;
+	ss << total_value;
+	string text = ss.str();
+
+	double font_scale = 1;
+	int baseline = 0;
+	cv::Size text_size = cv::getTextSize(text, FONT_FACE, font_scale, FONT_THICKNESS, &baseline);
+
+	font_scale = img_scene.rows / (text_size.width * FONT_RATIO);
+	text_size = cv::getTextSize(text, FONT_FACE, font_scale, FONT_THICKNESS, &baseline);
+	cv::Point2f text_position =cv::Point2f(img_scene.rows*0.7, 50);
+	cv::putText(img_matches, text, text_position, FONT_FACE, font_scale, cv::Scalar(255, 0, 0), FONT_THICKNESS);
+
 	imshow("Good Matches & Object detection", img_matches);
 	waitKey(0);
 }
@@ -113,7 +132,6 @@ bool MoneyCounter::detect_bills(){
 	}
 
 	//-- Draw only "good" matches (i.e. whose distance is less than 3*min_dist )
-	cout << descriptors_object.rows << "<>" << matches.size() << endl;
 	for (int i = 0; i < descriptors_object.rows; i++){
 		if (matches[i].distance < 3 * min_dist){
 			good_matches.push_back(matches[i]);
@@ -125,11 +143,11 @@ bool MoneyCounter::detect_bills(){
 		return false;
 	}
 
-	/*
+	if (DEBUG_MODE)
 	drawMatches(img_object, keypoints_object, img_scene, keypoints_scene,
 		good_matches, img_matches, Scalar::all(-1), Scalar::all(-1),
 		vector<char>());
-	*/
+	
 	
 	obj.clear(); scene.clear();
 	for (int i = 0; i < good_matches.size(); i++){
@@ -156,11 +174,15 @@ bool MoneyCounter::detect_bills(){
 		}
 	}
 
-	highlight_bill(scene_corners, 5);
-	//highlight_bill(scene_corners, 5, img_object.cols);
-	//imshow("Good Matches & Object detection", img_matches);
-	//cv::waitKey(0);
-
+	if (DEBUG_MODE){
+		highlight_bill(scene_corners, bill_value, img_object.cols);
+		imshow("Good Matches & Object detection", img_matches);
+		cv::waitKey(0);
+	}
+	else {
+		highlight_bill(scene_corners, bill_value);
+	}
+	
 	total_value += bill_value;
 	cout << "+" << bill_value << " total:" << total_value<<endl;
 	
@@ -275,16 +297,16 @@ void MoneyCounter::filter_keypoints_10f(){
 	Area a;
 	a.add(4,4,27,24);
 	a.add(5,102,33,31);
-	a.add(136,4,93,128);
+	a.add(168,6,60,52);
 	filter(a);
 }
 
 void MoneyCounter::filter_keypoints_10b(){
 	Area a;
-	a.add(8, 6, 8 + 149, 6 + 47);
-	a.add(9, 104, 9 + 27, 104 + 30);
-	a.add(233, 4, 233 + 25, 4 + 24);
-	a.add(235, 110, 235 + 24, 110 + 23);
+	a.add(10,6,20,20);
+	a.add(9, 10, 30, 27);
+	a.add(233, 111, 23, 23);
+	a.add(233, 4, 23, 23);
 	filter(a);
 }
 
@@ -324,11 +346,6 @@ void MoneyCounter::filter_keypoints_50b(){
 	filter(a);
 }
 
-
-#define FONT_FACE cv::FONT_HERSHEY_SCRIPT_COMPLEX
-#define FONT_THICKNESS 3
-#define FONT_RATIO 4
-
 void MoneyCounter::highlight_bill(const std::vector<Point2f> &corners, int value, double shift){
 	line(img_matches, corners[0] + Point2f(shift, 0), corners[1] + Point2f(shift, 0), Scalar(0, 255, 0), 4);
 	line(img_matches, corners[1] + Point2f(shift, 0), corners[2] + Point2f(shift, 0), Scalar(0, 255, 0), 4);
@@ -343,7 +360,7 @@ void MoneyCounter::highlight_bill(const std::vector<Point2f> &corners, int value
 	ss << value;
 	string text = ss.str();
 
-	double font_scale = 2;
+	double font_scale = 1;
 	int baseline = 0;
 	cv::Size text_size = cv::getTextSize(text, FONT_FACE, font_scale, FONT_THICKNESS, &baseline);
 

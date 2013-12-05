@@ -22,6 +22,7 @@ int main( int argc, char** argv )
 
 	try{
 		MoneyCounter mc = MoneyCounter(argv[1], argv[2]);
+		mc.DEBUG_MODE = false;
 		mc.set_detector(new SurfFeatureDetector(400));
 		mc.set_extractor(new SurfDescriptorExtractor());
 		mc.set_matcher(new BFMatcher());

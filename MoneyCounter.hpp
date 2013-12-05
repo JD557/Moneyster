@@ -35,6 +35,8 @@ public:
 
 	void count();
 
+	bool DEBUG_MODE;
+
 private:
 	std::queue<std::string> patterns;
 
