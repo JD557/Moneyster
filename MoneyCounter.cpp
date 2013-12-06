@@ -312,10 +312,9 @@ void MoneyCounter::filter_keypoints_10b(){
 
 void MoneyCounter::filter_keypoints_20f(){
 	Area a;
-	a.add(4, 4, 4 + 26, 4 + 23);
-	a.add(6, 109, 6 + 31, 109 + 27);
-	a.add(159, 5, 159 + 63, 5 + 52);
-	a.add(129, 45, 129 + 106, 45 + 92);
+	a.add(5, 3, 24, 25);
+	a.add(7,110,29,25);
+	a.add(159, 5, 63,52);
 	filter(a);
 }
 
