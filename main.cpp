@@ -1,4 +1,5 @@
 #include "MoneyCounter.hpp"
+#include <stdexcept>
 
 /*
  * Calculate keypoints and descriptors (related vector <-> mat )

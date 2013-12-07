@@ -1,4 +1,5 @@
 #include "MoneyCounter.hpp"
+#include <stdexcept>
 #define FONT_FACE cv::FONT_HERSHEY_SCRIPT_COMPLEX
 #define FONT_THICKNESS 3
 #define FONT_RATIO 4
@@ -30,7 +31,7 @@ void MoneyCounter::create_bill_list(string pattern_folder){
 	
 	char l = pattern_folder[pattern_folder.size() - 1];
 	if (l == '\\' || l == '/'){
-		pattern_folder_sanitized = pattern_folder.substr(0, pattern_folder.size() - 2) + '/';
+		pattern_folder_sanitized = pattern_folder;//pattern_folder.substr(0, pattern_folder.size() - 2) + '/';
 	}
 	else {
 		pattern_folder_sanitized = pattern_folder + '/';
@@ -209,7 +210,6 @@ void MoneyCounter::read_pattern(){
 
 	img_object = imread(pattern_folder_sanitized+patterns.front(), CV_LOAD_IMAGE_GRAYSCALE);
 	
-
 	if (!img_object.data) throw std::runtime_error("Missing image");
 
 	detector->detect(img_object, keypoints_object);

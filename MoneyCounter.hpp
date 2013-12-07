@@ -86,6 +86,7 @@ private:
 	bool detect_bills();
 	void display();
 	void highlight_bill(const std::vector<Point2f> &corners, int value, double shift = 0);
-	
 };
+
+void writeText(Mat& dst,int x,int y,string text,double scale,bool center);
 
