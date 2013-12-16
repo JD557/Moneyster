@@ -10,6 +10,7 @@
 #include "opencv2/nonfree/nonfree.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include <sstream>
+#include <time.h>
 
 using namespace cv;
 
@@ -35,7 +36,12 @@ public:
 
 	void count();
 
-	bool DEBUG_MODE;
+	bool DEBUG_MODE = false;
+	bool BENCHMARK_MODE = false;
+
+	int get_found();
+	int get_time();
+	double get_accuracy();
 
 private:
 	std::queue<std::string> patterns;
@@ -66,11 +72,13 @@ private:
 	std::vector<Point2f> scene;
 
 	double x_shift;
-	int total_value,bill_value;
+	int total_value,bill_value,found;
 	int bill_nr;
 	std::string pattern_folder_sanitized;
 	std::string scene_img_location;
 	int iteration;
+	clock_t init_time;
+	double delta_time;
 
 	/* ------------------------------------------------ */
 	void create_bill_list();

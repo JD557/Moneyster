@@ -14,7 +14,7 @@ MoneyCounter::MoneyCounter(string pattern_folder, string scene_img){
 
 	obj_corners.resize(4);
 	scene_img_location = scene_img;
-	iteration = 1;
+	iteration = 0;
 
 	char l = pattern_folder[pattern_folder.size() - 1];
 	if (l == '\\' || l == '/'){
@@ -23,8 +23,6 @@ MoneyCounter::MoneyCounter(string pattern_folder, string scene_img){
 	else {
 		pattern_folder_sanitized = pattern_folder + '/';
 	}
-
-	DEBUG_MODE = false;
 }
 
 MoneyCounter::~MoneyCounter()
@@ -65,9 +63,12 @@ void MoneyCounter::count() {
 	if (matcher == NULL)
 		throw std::runtime_error("Missing matcher implementation");
 
+	init_time = clock();
+
 	img_matches = imread(scene_img_location);
 	create_bill_list();
 	total_value = 0;
+	found = 0;
 	iteration++;
 
 	detector->detect(img_scene, keypoints_scene);
@@ -89,6 +90,8 @@ void MoneyCounter::count() {
 		keypoints_scene = keypoints_scene_bk;
 		descriptors_scene = descriptors_scene_bk;
 	}
+
+	delta_time = double(clock() - init_time) / (double)CLOCKS_PER_SEC;
 
 	display();
 }
@@ -119,7 +122,10 @@ void MoneyCounter::display(){
 	
 
 	imshow("Good Matches & Object detection " + sss.str(), img_matches);
-	waitKey();	
+	if (BENCHMARK_MODE)
+		waitKey(33);
+	else
+		waitKey();
 	//destroyAllWindows();
 }
 
@@ -193,6 +199,7 @@ bool MoneyCounter::detect_bills(){
 	}
 	
 	total_value += bill_value;
+	found++;
 	cout << "+" << bill_value << " total:" << total_value<<endl;
 	
 	//remove all the matches from the area
@@ -393,4 +400,16 @@ int Area::size(){
 
 vector<Point2f> Area::get(int i){
 	return areas[i];
+}
+
+int MoneyCounter::get_found(){
+	return found;
+}
+
+int MoneyCounter::get_time(){
+	return delta_time;
+}
+
+double MoneyCounter::get_accuracy(){
+	return delta_time;
 }
