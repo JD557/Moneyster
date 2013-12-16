@@ -8,14 +8,21 @@ using std::cout;
 using std::endl; 
 
 MoneyCounter::MoneyCounter(string pattern_folder, string scene_img){
-	create_bill_list(pattern_folder);
 
 	img_scene = imread(scene_img, CV_LOAD_IMAGE_GRAYSCALE);
 	if (!img_scene.data) throw std::runtime_error("Missing image");
 
-	total_value = 0;
 	obj_corners.resize(4);
-	img_matches = imread(scene_img);
+	scene_img_location = scene_img;
+	iteration = 1;
+
+	char l = pattern_folder[pattern_folder.size() - 1];
+	if (l == '\\' || l == '/'){
+		pattern_folder_sanitized = pattern_folder;//pattern_folder.substr(0, pattern_folder.size() - 2) + '/';
+	}
+	else {
+		pattern_folder_sanitized = pattern_folder + '/';
+	}
 
 	DEBUG_MODE = false;
 }
@@ -27,16 +34,7 @@ MoneyCounter::~MoneyCounter()
 	delete matcher; */
 }
 
-void MoneyCounter::create_bill_list(string pattern_folder){
-	
-	char l = pattern_folder[pattern_folder.size() - 1];
-	if (l == '\\' || l == '/'){
-		pattern_folder_sanitized = pattern_folder;//pattern_folder.substr(0, pattern_folder.size() - 2) + '/';
-	}
-	else {
-		pattern_folder_sanitized = pattern_folder + '/';
-	}
-
+void MoneyCounter::create_bill_list(){
 	patterns.push("5f.jpg");
 	patterns.push("5b.jpg");
 	patterns.push("10f.jpg");
@@ -67,6 +65,10 @@ void MoneyCounter::count() {
 	if (matcher == NULL)
 		throw std::runtime_error("Missing matcher implementation");
 
+	img_matches = imread(scene_img_location);
+	create_bill_list();
+	total_value = 0;
+	iteration++;
 
 	detector->detect(img_scene, keypoints_scene);
 
@@ -78,7 +80,6 @@ void MoneyCounter::count() {
 	extractor->compute(img_scene, keypoints_scene, descriptors_scene);
 
 
-
 	std::vector<KeyPoint> keypoints_scene_bk = keypoints_scene;
 	Mat descriptors_scene_bk = descriptors_scene.clone();
 
@@ -86,7 +87,7 @@ void MoneyCounter::count() {
 		read_pattern();
 		while (detect_bills());
 		keypoints_scene = keypoints_scene_bk;
-		descriptors_scene = descriptors_scene_bk.clone();
+		descriptors_scene = descriptors_scene_bk;
 	}
 
 	display();
@@ -111,8 +112,15 @@ void MoneyCounter::display(){
 	cv::Point2f text_position =cv::Point2f(img_scene.rows*0.7, 50);
 	cv::putText(img_matches, text, text_position, FONT_FACE, font_scale, cv::Scalar(255, 0, 0), FONT_THICKNESS);
 
-	imshow("Good Matches & Object detection", img_matches);
-	waitKey(0);
+	
+	std::stringstream sss;
+	sss.clear();
+	sss << iteration;
+	
+
+	imshow("Good Matches & Object detection " + sss.str(), img_matches);
+	waitKey();	
+	//destroyAllWindows();
 }
 
 bool MoneyCounter::detect_bills(){
@@ -177,7 +185,7 @@ bool MoneyCounter::detect_bills(){
 
 	if (DEBUG_MODE){
 		highlight_bill(scene_corners, bill_value, img_object.cols);
-		imshow("Good Matches & Object detection", img_matches);
+		imshow("Debug", img_matches);
 		cv::waitKey(0);
 	}
 	else {

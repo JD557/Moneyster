@@ -20,23 +20,30 @@ void readme();
 int main( int argc, char** argv )
 {
 	if (argc != 3) { readme(); return -1; }
-
+	
 	try{
 		MoneyCounter mc = MoneyCounter(argv[1], argv[2]);
 		mc.DEBUG_MODE = false;
+
 		mc.set_detector(new SurfFeatureDetector(400));
 		mc.set_extractor(new SurfDescriptorExtractor());
 		mc.set_matcher(new BFMatcher());
 		mc.count();
+		
+		mc.set_detector(new SiftFeatureDetector);
+		mc.set_detector(new SiftDescriptorExtractor);
+
+		mc.count();
+		exit(0);
 	}
 	catch (std::runtime_error e){
-		std::cout << e.what() << std::endl;
-		return -1;
+		std::cout << e.what() << std::endl;	
+		exit(-1);
 	}
+
 
 	return 0;
 }
-
 
 void readme()
 	{ std::cout << " Usage: ./MoneyCounter <bills_folder> <scene_image>" << std::endl; }

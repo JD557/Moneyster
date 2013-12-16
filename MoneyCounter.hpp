@@ -69,9 +69,11 @@ private:
 	int total_value,bill_value;
 	int bill_nr;
 	std::string pattern_folder_sanitized;
+	std::string scene_img_location;
+	int iteration;
 
 	/* ------------------------------------------------ */
-	void create_bill_list(std::string pattern_folder);
+	void create_bill_list();
 	void read_pattern();
 	void filter_keypoints(std::string bill);
 	void filter_keypoints_5f();
