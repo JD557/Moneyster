@@ -40,7 +40,7 @@ public:
 	bool BENCHMARK_MODE = false;
 
 	int get_found();
-	int get_time();
+	double get_time();
 	double get_accuracy();
 	void set_methods(string methods);
 	double get_precision();

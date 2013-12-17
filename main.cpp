@@ -34,7 +34,7 @@ bool debug_mode = false;
 
 void readme();
 void benchmark();
-void print_benchmark(int found, int time, double precision, double recall);
+void print_benchmark(int found, double time, double precision, double recall);
 
 int main( int argc, char** argv )
 {
@@ -99,7 +99,7 @@ struct model{
 void readme()
 	{ std::cout << " Usage: \n./MoneyCounter <bills_folder> <scene_image>\n./MoneyCounter --benchmark" << std::endl; }
 
-void print_benchmark(int found, int time, double precision, double recall){
+void print_benchmark(int found, double time, double precision, double recall){
 	std::cout << "Found, Time, Precision, Recall" << std::endl;
 	std::cout << found << "," << time << "," << precision << "," << recall << std::endl;
 }

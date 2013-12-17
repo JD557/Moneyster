@@ -122,7 +122,7 @@ void MoneyCounter::display(){
 
 	imshow(" " + sss.str(), img_matches);
 	if (BENCHMARK_MODE)
-		waitKey(1);
+		waitKey(100);
 	else
 		waitKey();
 	//destroyAllWindows();
@@ -432,7 +432,7 @@ int MoneyCounter::get_found(){
 	return found;
 }
 
-int MoneyCounter::get_time(){
+double MoneyCounter::get_time(){
 	return delta_time;
 }
 
