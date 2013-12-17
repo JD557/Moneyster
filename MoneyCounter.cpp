@@ -25,13 +25,6 @@ MoneyCounter::MoneyCounter(string pattern_folder, string scene_img){
 	}
 }
 
-MoneyCounter::~MoneyCounter()
-{
-/*	delete detector;
-	delete extractor;
-	delete matcher; */
-}
-
 void MoneyCounter::create_bill_list(){
 	patterns.push("5f.jpg");
 	patterns.push("5b.jpg");
@@ -66,6 +59,7 @@ void MoneyCounter::count() {
 	init_time = clock();
 
 	img_matches = imread(scene_img_location);
+	img_debug = img_matches.clone();
 	create_bill_list();
 	total_value = 0;
 	found = 0;
@@ -93,7 +87,8 @@ void MoneyCounter::count() {
 
 	delta_time = double(clock() - init_time) / (double)CLOCKS_PER_SEC;
 
-	display();
+	//if (!BENCHMARK_MODE)
+		display();
 }
 
 void MoneyCounter::display(){
@@ -112,21 +107,29 @@ void MoneyCounter::display(){
 
 	font_scale = img_scene.rows / (text_size.width * FONT_RATIO);
 	text_size = cv::getTextSize(text, FONT_FACE, font_scale, FONT_THICKNESS, &baseline);
-	cv::Point2f text_position =cv::Point2f(img_scene.rows*0.7, 50);
+	cv::Point2f text_position =cv::Point2f(img_scene.cols - 100, 45);
 	cv::putText(img_matches, text, text_position, FONT_FACE, font_scale, cv::Scalar(255, 0, 0), FONT_THICKNESS);
 
 	
 	std::stringstream sss;
 	sss.clear();
-	sss << iteration;
+	sss << iteration << current_methods() << " "<< time(NULL);
 	
 
-	imshow("Good Matches & Object detection " + sss.str(), img_matches);
+	imshow(" " + sss.str(), img_matches);
 	if (BENCHMARK_MODE)
-		waitKey(33);
+		waitKey(1);
 	else
 		waitKey();
 	//destroyAllWindows();
+}
+
+string MoneyCounter::current_methods(){
+	return methods;
+}
+
+void  MoneyCounter::set_methods(string methods){
+	this->methods = methods;
 }
 
 bool MoneyCounter::detect_bills(){
@@ -158,12 +161,6 @@ bool MoneyCounter::detect_bills(){
 		return false;
 	}
 
-	if (DEBUG_MODE)
-	drawMatches(img_object, keypoints_object, img_scene, keypoints_scene,
-		good_matches, img_matches, Scalar::all(-1), Scalar::all(-1),
-		vector<char>());
-	
-	
 	obj.clear(); scene.clear();
 	for (int i = 0; i < good_matches.size(); i++){
 		//-- Get the keypoints from the good matches
@@ -182,8 +179,15 @@ bool MoneyCounter::detect_bills(){
 		}
 	}
 
+	if (DEBUG_MODE)
+		drawMatches(img_object, keypoints_object, img_scene, keypoints_scene,
+		good_matches_inliers, img_debug, Scalar(0,0,255), Scalar(255,0,0),
+		vector<char>());
+
+
 	//check if all inliers are inside the area
 	for (int i = 0; i < good_matches_inliers.size(); ++i){
+		Point p = keypoints_scene[good_matches_inliers[i].trainIdx].pt;
 		if (pointPolygonTest(scene_corners, keypoints_scene[good_matches_inliers[i].trainIdx].pt, false) < 0){
 			return false;
 		}
@@ -191,7 +195,7 @@ bool MoneyCounter::detect_bills(){
 
 	if (DEBUG_MODE){
 		highlight_bill(scene_corners, bill_value, img_object.cols);
-		imshow("Debug", img_matches);
+		imshow("Debug", img_debug);
 		cv::waitKey(0);
 	}
 	else {
@@ -259,7 +263,7 @@ void MoneyCounter::filter_keypoints(std::string bill){
 	}
 	else if (bill == "10b.jpg"){
 		bill_value = 10;
-		filter_keypoints_10f();
+		filter_keypoints_10b();
 	}
 	else if (bill == "20f.jpg"){
 		bill_value = 20;
@@ -361,6 +365,14 @@ void MoneyCounter::filter_keypoints_50b(){
 }
 
 void MoneyCounter::highlight_bill(const std::vector<Point2f> &corners, int value, double shift){
+
+	if (DEBUG_MODE){
+		line(img_debug, corners[0] + Point2f(shift, 0), corners[1] + Point2f(shift, 0), Scalar(0, 255, 0), 4);
+		line(img_debug, corners[1] + Point2f(shift, 0), corners[2] + Point2f(shift, 0), Scalar(0, 255, 0), 4);
+		line(img_debug, corners[2] + Point2f(shift, 0), corners[3] + Point2f(shift, 0), Scalar(0, 255, 0), 4);
+		line(img_debug, corners[3] + Point2f(shift, 0), corners[0] + Point2f(shift, 0), Scalar(0, 255, 0), 4);
+	}
+	shift = 0;
 	line(img_matches, corners[0] + Point2f(shift, 0), corners[1] + Point2f(shift, 0), Scalar(0, 255, 0), 4);
 	line(img_matches, corners[1] + Point2f(shift, 0), corners[2] + Point2f(shift, 0), Scalar(0, 255, 0), 4);
 	line(img_matches, corners[2] + Point2f(shift, 0), corners[3] + Point2f(shift, 0), Scalar(0, 255, 0), 4);

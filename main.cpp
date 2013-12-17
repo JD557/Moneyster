@@ -16,7 +16,7 @@
 
 //Detectors
 FeatureDetector* d_fast = new FastFeatureDetector();
-FeatureDetector* d_surf = new SurfFeatureDetector(40);
+FeatureDetector* d_surf = new SurfFeatureDetector();
 FeatureDetector* d_sift = new SiftFeatureDetector();
 FeatureDetector* d_orb = new OrbFeatureDetector();
 //Extractors
@@ -44,11 +44,11 @@ int main( int argc, char** argv )
 	else{
 
 		try{
-			MoneyCounter mc = MoneyCounter(argv[1], argv[2]);
-			mc.DEBUG_MODE = false;
+			MoneyCounter mc(argv[1], argv[2]);
+			mc.DEBUG_MODE = true;
 
-			mc.set_detector(d_surf);
-			mc.set_extractor(e_surf);
+			mc.set_detector(d_sift);
+			mc.set_extractor(e_sift);
 			mc.set_matcher(m_bf);
 			mc.count();
 
@@ -68,6 +68,7 @@ struct model{
 	FeatureDetector* feature;
 	DescriptorExtractor* extractor;
 	DescriptorMatcher* matcher;
+	std::string name;
 };
 
 void readme()
@@ -78,28 +79,37 @@ void print_benchmark(int found, int time, double accuracy){
 }
 
 void benchmark(){
-	String test[] = { "./test/all.png", "./test/all.png", "./test/all.png" };
+	String test[] = { "./test/10s.png", "./test/5020.JPG", "./test/all.png" };
 	model sets[] = { 
-		{ d_surf, e_surf, m_bf },
-		{ d_fast, e_sift, m_bf },
-		{ d_surf, e_surf, m_bf },
-		{ d_surf, e_surf, m_bf },
-		{ d_surf, e_surf, m_bf },
+		{ d_surf, e_surf, m_bf, "SURF+SURF+BF"},
+		//{ d_fast, e_sift, m_bf },
+		{ d_sift, e_sift, m_bf, "SIFT+SIFT+BF" }/*,
 		{ d_surf, e_surf, m_bf },
 		{ d_surf, e_surf, m_bf },
-		{ d_surf, e_surf, m_bf }
+		{ d_surf, e_surf, m_bf },
+		{ d_surf, e_surf, m_bf },
+		{ d_surf, e_surf, m_bf }*/
 	};
 
-	for (int i = 0; i < 3; ++i){
-		MoneyCounter mc = MoneyCounter("./train", test[i]);
+	for (int i = 0; i < (sizeof(test) / sizeof(*test)); ++i){
+
+		MoneyCounter mc("./train", test[i]);
 		mc.BENCHMARK_MODE = true;
-		for (int j = 0; j < 8; ++j){
+		mc.DEBUG_MODE = true;
+		std::cout << "\nimage" << i+1 << ": " << test[i];
+
+		for (int j = 0; j < (sizeof(sets) / sizeof(*sets)); ++j){
+			std::cout << std::endl << sets[j].name << std::endl;
+			mc.set_methods(sets[j].name);
 			mc.set_detector(sets[j].feature);
 			mc.set_extractor(sets[j].extractor);
 			mc.set_matcher(sets[j].matcher);
 			mc.count();
 			print_benchmark(mc.get_found(),mc.get_time(),mc.get_accuracy());
 		}
+
 	}
+	waitKey();
+	
 }
 

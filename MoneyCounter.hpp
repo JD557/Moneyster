@@ -28,7 +28,7 @@ class MoneyCounter
 {
 public:
 	MoneyCounter(string pattern_folder, std::string scene_img);
-	~MoneyCounter();
+	
 
 	void set_detector(FeatureDetector* detector);
 	void set_extractor(DescriptorExtractor* extractor);
@@ -42,12 +42,15 @@ public:
 	int get_found();
 	int get_time();
 	double get_accuracy();
+	void set_methods(string methods);
 
 private:
 	std::queue<std::string> patterns;
 
 	Mat img_object;
 	Mat img_scene;
+	Mat img_matches;
+	Mat img_debug;
 
 	FeatureDetector* detector;
 	DescriptorExtractor* extractor;
@@ -59,8 +62,10 @@ private:
 	std::vector<KeyPoint> keypoints_scene;
 	Mat descriptors_object;
 	Mat descriptors_scene;
-	Mat img_matches;	
+		
 
+	string methods = "";
+	
 	double max_dist, min_dist;
 
 	Mat inliers;
@@ -96,6 +101,7 @@ private:
 	bool detect_bills();
 	void display();
 	void highlight_bill(const std::vector<Point2f> &corners, int value, double shift = 0);
+	string current_methods();
 };
 
 void writeText(Mat& dst,int x,int y,string text,double scale,bool center);
