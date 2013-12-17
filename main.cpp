@@ -29,26 +29,51 @@ DescriptorExtractor* e_freak = new FREAK();
 DescriptorMatcher* m_flann = new FlannBasedMatcher();
 DescriptorMatcher* m_bf = new BFMatcher();
 
+bool benchmark_mode = false;
+bool debug_mode = false;
+
 void readme();
 void benchmark();
 
 int main( int argc, char** argv )
 {
-	if (argc == 2 && strcmp(argv[1],"--benchmark")==0){
+	int found = 0;
+	string train;
+	string test;
+
+
+	for (int i = 1; i < argc; ++i){
+		if (strcmp(argv[i], "-d")==0){
+			debug_mode = true;
+		}
+		else if (strcmp(argv[i], "--benchmark") == 0){
+			benchmark_mode = true;
+		}
+		else if(found<3 && !benchmark_mode){
+			++found;
+			if (found == 1)
+				train = argv[i];
+			else if (found == 2)
+				test = argv[i];
+			else
+				break;
+		}
+	}
+
+	if (found!=2 || (benchmark_mode && found>0)){
+		readme(); return -1;
+	}
+
+	if (benchmark_mode){
 		benchmark();
-		
-	}
-	else if (argc != 3) { 
-		readme(); return -1; 
-	}
-	else{
+	} else {
 
 		try{
-			MoneyCounter mc(argv[1], argv[2]);
-			mc.DEBUG_MODE = true;
+			MoneyCounter mc(train, test);
+			mc.DEBUG_MODE = debug_mode;
 
-			mc.set_detector(d_sift);
-			mc.set_extractor(e_sift);
+			mc.set_detector(d_surf);
+			mc.set_extractor(e_surf);
 			mc.set_matcher(m_bf);
 			mc.count();
 
@@ -95,7 +120,8 @@ void benchmark(){
 
 		MoneyCounter mc("./train", test[i]);
 		mc.BENCHMARK_MODE = true;
-		mc.DEBUG_MODE = true;
+		mc.DEBUG_MODE = debug_mode;
+
 		std::cout << "\nimage" << i+1 << ": " << test[i];
 
 		for (int j = 0; j < (sizeof(sets) / sizeof(*sets)); ++j){
