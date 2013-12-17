@@ -61,7 +61,7 @@ int main( int argc, char** argv )
 		}
 	}
 
-	if (found!=2 || (benchmark_mode && found>0)){
+	if ((found == 0 & !benchmark_mode) || (benchmark_mode && found>0)){
 		readme(); return -1;
 	}
 
