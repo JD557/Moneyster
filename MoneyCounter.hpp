@@ -43,6 +43,8 @@ public:
 	int get_time();
 	double get_accuracy();
 	void set_methods(string methods);
+	double get_precision();
+	double get_recall();
 
 private:
 	std::queue<std::string> patterns;
@@ -51,6 +53,8 @@ private:
 	Mat img_scene;
 	Mat img_matches;
 	Mat img_debug;
+	Mat img_mask;
+	Mat img_belief;
 
 	FeatureDetector* detector;
 	DescriptorExtractor* extractor;

@@ -59,7 +59,11 @@ void MoneyCounter::count() {
 	init_time = clock();
 
 	img_matches = imread(scene_img_location);
+	string scene_mask_location=scene_img_location;
+	scene_mask_location.insert(scene_mask_location.size()-4,"_mask");
+	img_mask = imread(scene_mask_location);
 	img_debug = img_matches.clone();
+	img_belief = Mat(img_matches.rows,img_matches.cols,CV_8U);
 	create_bill_list();
 	total_value = 0;
 	found = 0;
@@ -395,6 +399,16 @@ void MoneyCounter::highlight_bill(const std::vector<Point2f> &corners, int value
 	cv::Point2f text_position = center - cv::Point2f(text_size.width / 2.0, -text_size.height / 2.0);
 	cv::putText(img_matches, text, text_position, FONT_FACE, font_scale, cv::Scalar(255, 0, 0), FONT_THICKNESS);
 
+	vector< Point_<int> > int_corners;
+	for (size_t i=0;i<corners.size();++i) {
+		Point_<int> pt;
+		pt.x = (int) corners[i].x;
+		pt.y = (int) corners[i].y;
+		int_corners.push_back(pt);
+	}
+
+	cv::fillConvexPoly(img_belief,int_corners,Scalar(255));
+
 }
 
 void Area::add(int x, int y, int w, int h){
@@ -424,4 +438,58 @@ int MoneyCounter::get_time(){
 
 double MoneyCounter::get_accuracy(){
 	return delta_time;
+}
+
+double MoneyCounter::get_precision(){ // TP/(TP+FP)
+	size_t truePositives  = 0;
+	size_t falsePositives = 0;
+	size_t trueNegatives  = 0;
+	size_t falseNegatives = 0;
+	for (size_t y=0;y<img_mask.rows;++y) {
+
+		for (size_t x=0;x<img_mask.rows;++x) {
+			if (img_mask.at<Vec3b>(y,x)[0]==255) {
+				if (img_belief.at<unsigned char>(y,x)==255) {
+					truePositives++;
+				}
+				else {falseNegatives++;}
+			}
+			else {
+				if (img_belief.at<unsigned char>(y,x)==255) {
+					falsePositives++;
+				}
+				else {trueNegatives++;}
+			}
+
+		}
+	}
+	if (truePositives+falsePositives==0) {return 0;}
+	return (double)truePositives/(double)(truePositives+falsePositives);
+}
+
+double MoneyCounter::get_recall(){ // TP/(TP+FN)
+	size_t truePositives  = 0;
+	size_t falsePositives = 0;
+	size_t trueNegatives  = 0;
+	size_t falseNegatives = 0;
+	for (size_t y=0;y<img_mask.rows;++y) {
+
+		for (size_t x=0;x<img_mask.rows;++x) {
+			if (img_mask.at<Vec3b>(y,x)[0]==255) {
+				if (img_belief.at<unsigned char>(y,x)==255) {
+					truePositives++;
+				}
+				else {falseNegatives++;}
+			}
+			else {
+				if (img_belief.at<unsigned char>(y,x)==255) {
+					falsePositives++;
+				}
+				else {trueNegatives++;}
+			}
+
+		}
+	}
+	if (truePositives+falseNegatives==0) {return 0;}
+	return (double)truePositives/(double)(truePositives+falseNegatives);
 }
