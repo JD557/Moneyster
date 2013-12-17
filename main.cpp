@@ -34,6 +34,7 @@ bool debug_mode = false;
 
 void readme();
 void benchmark();
+void print_benchmark(int found, int time, double precision, double recall);
 
 int main( int argc, char** argv )
 {
@@ -76,12 +77,11 @@ int main( int argc, char** argv )
 			mc.set_extractor(e_surf);
 			mc.set_matcher(m_bf);
 			mc.count();
-
-			exit(0);
+			print_benchmark(mc.get_found(), mc.get_time(), mc.get_precision(), mc.get_recall());
 		}
 		catch (std::runtime_error e){
 			std::cout << e.what() << std::endl;
-			exit(-1);
+			return -1;
 		}
 
 	}
@@ -99,8 +99,8 @@ struct model{
 void readme()
 	{ std::cout << " Usage: \n./MoneyCounter <bills_folder> <scene_image>\n./MoneyCounter --benchmark" << std::endl; }
 
-void print_benchmark(int found, int time, double accuracy){
-	std::cout << found << "," << time << "," << accuracy << std::endl;
+void print_benchmark(int found, int time, double precision, double recall){
+	std::cout << found << "," << time << "," << precision << "," << recall << std::endl;
 }
 
 void benchmark(){
@@ -131,7 +131,7 @@ void benchmark(){
 			mc.set_extractor(sets[j].extractor);
 			mc.set_matcher(sets[j].matcher);
 			mc.count();
-			print_benchmark(mc.get_found(),mc.get_time(),mc.get_accuracy());
+			print_benchmark(mc.get_found(), mc.get_time(), mc.get_precision(), mc.get_recall());
 		}
 
 	}
