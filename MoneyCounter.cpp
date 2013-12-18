@@ -62,6 +62,7 @@ void MoneyCounter::count() {
 	string scene_mask_location=scene_img_location;
 	scene_mask_location.insert(scene_mask_location.size()-4,"_mask");
 	img_mask = imread(scene_mask_location);
+	if (!img_mask.data) std::cout << "no mask found. no values for precision or recall." << std::endl;
 	img_debug = img_matches.clone();
 	img_belief = Mat(img_matches.rows,img_matches.cols,CV_8U);
 	create_bill_list();
@@ -111,7 +112,7 @@ void MoneyCounter::display(){
 
 	font_scale = img_scene.rows / (text_size.width * FONT_RATIO);
 	text_size = cv::getTextSize(text, FONT_FACE, font_scale, FONT_THICKNESS, &baseline);
-	cv::Point2f text_position =cv::Point2f(img_scene.cols - 100, 45);
+	cv::Point2f text_position =cv::Point2f(img_scene.cols - 165, 45);
 	cv::putText(img_matches, text, text_position, FONT_FACE, font_scale, cv::Scalar(255, 0, 0), FONT_THICKNESS);
 
 	
@@ -119,12 +120,13 @@ void MoneyCounter::display(){
 	sss.clear();
 	sss << iteration << current_methods() << " "<< time(NULL);
 	
-
-	imshow(" " + sss.str(), img_matches);
-	if (BENCHMARK_MODE)
-		waitKey(100);
-	else
-		waitKey();
+	if (!NO_IMAGE){
+		imshow(" " + sss.str(), img_matches);
+		if (BENCHMARK_MODE)
+			waitKey(100);
+		else
+			waitKey();
+	}
 	//destroyAllWindows();
 }
 
@@ -199,8 +201,10 @@ bool MoneyCounter::detect_bills(){
 
 	if (DEBUG_MODE){
 		highlight_bill(scene_corners, bill_value, img_object.cols);
-		imshow("Debug", img_debug);
-		cv::waitKey(0);
+		if (!NO_IMAGE){
+			imshow("Debug", img_debug);
+			cv::waitKey(0);
+		}
 	}
 	else {
 		highlight_bill(scene_corners, bill_value);

@@ -29,8 +29,13 @@ DescriptorExtractor* e_freak = new FREAK();
 DescriptorMatcher* m_flann = new FlannBasedMatcher();
 DescriptorMatcher* m_bf = new BFMatcher();
 
+FeatureDetector* dd = d_surf;
+DescriptorExtractor* ee = e_surf;
+DescriptorMatcher* mm = m_bf;
+
 bool benchmark_mode = false;
 bool debug_mode = false;
+bool no_image = false;
 
 void readme();
 void benchmark();
@@ -41,16 +46,53 @@ int main( int argc, char** argv )
 	int found = 0;
 	string train;
 	string test;
+	
 
 
 	for (int i = 1; i < argc; ++i){
 		if (strcmp(argv[i], "-d")==0){
 			debug_mode = true;
 		}
+		else if (strcmp(argv[i], "--no-image") == 0){
+			no_image = true;
+		}
+		else if (strcmp(argv[i], "--d-fast") == 0){
+			dd = d_fast;
+		}
+		else if (strcmp(argv[i], "--d-surf") == 0){
+			dd = d_surf;
+		}
+		else if (strcmp(argv[i], "--d-sift") == 0){
+			dd = d_sift;
+		}
+		else if (strcmp(argv[i], "--d-orb") == 0){
+			dd = d_orb;
+		}
+		else if (strcmp(argv[i], "--e-sift") == 0){
+			ee = e_sift;
+		}
+		else if (strcmp(argv[i], "--e-orb") == 0){
+			ee = e_orb;
+		}
+		else if (strcmp(argv[i], "--e-orb") == 0){
+			ee = e_orb;
+		}
+		else if (strcmp(argv[i], "--e-brief") == 0){
+			ee = e_brief;
+		}
+		else if (strcmp(argv[i], "--e-freak") == 0){
+			ee = e_freak;
+		}
+		else if (strcmp(argv[i], "--m-flann") == 0){
+			mm = m_flann;
+		}
+		else if(strcmp(argv[i], "--m-bf") == 0){
+			mm = m_bf;
+		}
 		else if (strcmp(argv[i], "--benchmark") == 0){
 			benchmark_mode = true;
 		}
-		else if(found<3 && !benchmark_mode){
+		else if(found<6 && !benchmark_mode){
 			++found;
 			if (found == 1)
 				train = argv[i];
@@ -67,17 +109,20 @@ int main( int argc, char** argv )
 
 	if (benchmark_mode){
 		benchmark();
+		//getchar();
 	} else {
 
 		try{
 			MoneyCounter mc(train, test);
 			mc.DEBUG_MODE = debug_mode;
+			mc.NO_IMAGE = no_image;
 
-			mc.set_detector(d_surf);
-			mc.set_extractor(e_surf);
-			mc.set_matcher(m_bf);
+			mc.set_detector(dd);
+			mc.set_extractor(ee);
+			mc.set_matcher(mm);
 			mc.count();
 			print_benchmark(mc.get_found(), mc.get_time(), mc.get_precision(), mc.get_recall());
+			
 		}
 		catch (std::runtime_error e){
 			std::cout << e.what() << std::endl;
@@ -85,7 +130,8 @@ int main( int argc, char** argv )
 		}
 
 	}
-
+	waitKey();
+	//getchar();
 	return 0;
 }
 
@@ -122,6 +168,7 @@ void benchmark(){
 		MoneyCounter mc("./train", test[i]);
 		mc.BENCHMARK_MODE = true;
 		mc.DEBUG_MODE = debug_mode;
+		mc.NO_IMAGE = no_image;
 
 		std::cout << "\nimage" << i+1 << ": " << test[i];
 

@@ -38,6 +38,7 @@ public:
 
 	bool DEBUG_MODE = false;
 	bool BENCHMARK_MODE = false;
+	bool NO_IMAGE = false;
 
 	int get_found();
 	double get_time();
